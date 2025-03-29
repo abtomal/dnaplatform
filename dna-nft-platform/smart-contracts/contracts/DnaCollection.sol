@@ -4,24 +4,25 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./security/ReentrancyGuard.sol";
 
 /**
  * @title DnaCollection
- * @dev Implementa una collezione NFT per i contenuti scientifici di DnA
+ * @dev Implementa una collezione NFT per i contenuti scientifici di DnA con protezioni di sicurezza
  */
-contract DnaCollection is ERC721URIStorage, Ownable {
-    // Sostituiamo Counters con un semplice contatore
+contract DnaCollection is ERC721URIStorage, Ownable, ReentrancyGuard {
+    // Contatore per gli ID dei token
     uint256 private _nextTokenId;
     
-    // Mapping da token ID al suo prezzo
-    mapping(uint256 => uint256) private _tokenPrices;
+    // Mapping da token ID al suo prezzo iniziale
+    mapping(uint256 => uint256) private _tokenStartingPrices;
     
     // Metadati della collezione
     string public collectionDescription;
     
     // Eventi
-    event NFTCreated(uint256 tokenId, string tokenURI, uint256 price);
-    event NFTPriceChanged(uint256 tokenId, uint256 newPrice);
+    event NFTCreated(uint256 tokenId, string tokenURI, uint256 startingPrice);
+    event NFTStartingPriceChanged(uint256 tokenId, uint256 newStartingPrice);
     event NFTPurchased(uint256 tokenId, address buyer, uint256 price);
     
     /**
@@ -44,68 +45,78 @@ contract DnaCollection is ERC721URIStorage, Ownable {
     }
     
     /**
-     * @dev Crea un nuovo NFT
+     * @dev Crea un nuovo NFT con un prezzo iniziale
      */
     function createNFT(
         address recipient,
         string memory tokenURI,
-        uint256 price
+        uint256 startingPrice
     ) public onlyOwner returns (uint256) {
+        require(startingPrice > 0, "DnaCollection: il prezzo iniziale deve essere maggiore di zero");
         uint256 tokenId = _nextTokenId++;
         
         _safeMint(recipient, tokenId);
         _setTokenURI(tokenId, tokenURI);
-        _setTokenPrice(tokenId, price);
+        _setTokenStartingPrice(tokenId, startingPrice);
         
-        emit NFTCreated(tokenId, tokenURI, price);
+        emit NFTCreated(tokenId, tokenURI, startingPrice);
         
         return tokenId;
     }
     
     /**
-     * @dev Imposta il prezzo di un NFT
+     * @dev Imposta il prezzo iniziale di un NFT
      */
-    function setTokenPrice(uint256 tokenId, uint256 price) public onlyOwner {
+    function setTokenStartingPrice(uint256 tokenId, uint256 startingPrice) public onlyOwner {
         require(tokenExists(tokenId), "DnaCollection: prezzo impostato per token inesistente");
-        _setTokenPrice(tokenId, price);
-        emit NFTPriceChanged(tokenId, price);
+        require(startingPrice > 0, "DnaCollection: il prezzo iniziale deve essere maggiore di zero");
+        _setTokenStartingPrice(tokenId, startingPrice);
+        emit NFTStartingPriceChanged(tokenId, startingPrice);
     }
     
     /**
-     * @dev Funzione interna per impostare il prezzo del token
+     * @dev Funzione interna per impostare il prezzo iniziale del token
      */
-    function _setTokenPrice(uint256 tokenId, uint256 price) internal {
-        _tokenPrices[tokenId] = price;
+    function _setTokenStartingPrice(uint256 tokenId, uint256 startingPrice) internal {
+        _tokenStartingPrices[tokenId] = startingPrice;
     }
     
     /**
-     * @dev Ottiene il prezzo di un NFT
+     * @dev Ottiene il prezzo iniziale di un NFT
      */
-    function getTokenPrice(uint256 tokenId) public view returns (uint256) {
+    function getTokenStartingPrice(uint256 tokenId) public view returns (uint256) {
         require(tokenExists(tokenId), "DnaCollection: richiesta prezzo per token inesistente");
-        return _tokenPrices[tokenId];
+        return _tokenStartingPrices[tokenId];
     }
     
     /**
-     * @dev Permette a un utente di acquistare un NFT
+     * @dev Permette a un utente di acquistare un NFT al prezzo iniziale con protezione contro reentrancy
      */
-    function purchaseNFT(uint256 tokenId) public payable {
+    function purchaseNFT(uint256 tokenId) public payable nonReentrant {
         require(tokenExists(tokenId), "DnaCollection: richiesta di acquisto per token inesistente");
         address owner = ownerOf(tokenId);
         require(owner != msg.sender, "DnaCollection: non puoi acquistare il tuo stesso NFT");
         
-        uint256 price = _tokenPrices[tokenId];
+        uint256 price = _tokenStartingPrices[tokenId];
         require(msg.value >= price, "DnaCollection: fondi insufficienti");
         
         address payable seller = payable(owner);
         
-        // Trasferisce la proprieta dell'NFT
+        // Prima aggiorna lo stato interno
         _transfer(owner, msg.sender, tokenId);
         
-        // Trasferisce i fondi al venditore
-        seller.transfer(msg.value);
+        // Poi interagisci con esterni usando il pattern più sicuro
+        (bool success, ) = seller.call{value: price}("");
+        require(success, "DnaCollection: trasferimento fallito");
         
-        emit NFTPurchased(tokenId, msg.sender, msg.value);
+        // Rimborsa l'eccesso all'acquirente se necessario
+        uint256 excess = msg.value - price;
+        if (excess > 0) {
+            (bool refundSuccess, ) = payable(msg.sender).call{value: excess}("");
+            require(refundSuccess, "DnaCollection: rimborso eccesso fallito");
+        }
+        
+        emit NFTPurchased(tokenId, msg.sender, price);
     }
     
     /**
@@ -123,19 +134,42 @@ contract DnaCollection is ERC721URIStorage, Ownable {
     }
     
     /**
-     * @dev Sovrascrive la funzione transferFrom per aggiornare lo stato interno
+     * @dev Sovrascrive la funzione transferFrom
      */
     function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) {
         super.transferFrom(from, to, tokenId);
     }
     
     /**
-     * @dev Sovrascrive la funzione safeTransferFrom per aggiornare lo stato interno
+     * @dev Sovrascrive la funzione safeTransferFrom
      */
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data)
         public
         override(ERC721, IERC721)
     {
         super.safeTransferFrom(from, to, tokenId, data);
+    }
+    
+    /**
+     * @dev Prepara un NFT per l'asta approvando il contratto asta a trasferirlo
+     * @param tokenId ID del token da preparare per l'asta
+     * @param auctionContract Indirizzo del contratto DnaAuction
+     */
+    function prepareNFTForAuction(
+        uint256 tokenId,
+        address auctionContract
+    ) public onlyOwner nonReentrant {
+        require(tokenExists(tokenId), "DnaCollection: token inesistente");
+        require(auctionContract != address(0), "DnaCollection: indirizzo asta invalido");
+        
+        // Verifica che il msg.sender sia il proprietario del token o il proprietario del contratto
+        address tokenOwner = ownerOf(tokenId);
+        require(
+            tokenOwner == msg.sender || isApprovedForAll(tokenOwner, msg.sender),
+            "DnaCollection: non autorizzato a preparare questo NFT"
+        );
+        
+        // Approva il contratto asta a trasferire l'NFT
+        approve(auctionContract, tokenId);
     }
 }
