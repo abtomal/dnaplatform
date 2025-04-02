@@ -1,9 +1,10 @@
 // src/pages/Home.tsx
 import React, { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useWatchContractEvent } from 'wagmi';
+import { useAccount, useWriteContract, useTransaction } from 'wagmi';
 import { formatEther } from 'viem';
 import { Link } from 'react-router-dom';
 import { useNFTContract, NFT } from '../hooks/useNFTContract';
+import FeaturedContent from '../components/FeaturedContent/FeaturedContent';
 import './Home.css';
 
 const Home: React.FC = () => {
@@ -17,10 +18,14 @@ const Home: React.FC = () => {
   const {
     writeContract,
     data: txHash,
-    isPending, 
-    isError: isWriteError,
+    status: writeStatus,
     error: writeError
   } = useWriteContract();
+  
+  // Monitoraggio della transazione
+  const { status: txStatus } = useTransaction({
+    hash: txHash
+  });
   
   // Funzione per recuperare i metadati dall'URI
   const fetchMetadata = async (tokenURI: string) => {
@@ -44,18 +49,6 @@ const Home: React.FC = () => {
       return null;
     }
   };
-
-  // Ascolta eventi di acquisto per aggiornare l'interfaccia
-  useWatchContractEvent({
-    address: contractAddress,
-    abi,
-    eventName: 'NFTPurchased',
-    onLogs: () => {
-      // Quando un NFT viene acquistato, aggiorna la lista
-      fetchNFTs();
-      setPurchasingId(null);
-    },
-  });
   
   // Gestione dell'acquisto
   const handlePurchase = (tokenId: number, price: bigint) => {
@@ -82,15 +75,21 @@ const Home: React.FC = () => {
   
   // Gestione degli errori di scrittura
   useEffect(() => {
-    if (isWriteError && writeError) {
+    if (writeError) {
       alert(`Errore durante l'acquisto: ${writeError.message}`);
       setPurchasingId(null);
     }
-  }, [isWriteError, writeError]);
+    
+    if (txStatus === 'success') {
+      alert("Acquisto completato con successo!");
+      setPurchasingId(null);
+      fetchNFTs(); // Aggiorna la lista dopo l'acquisto
+    }
+  }, [writeError, txStatus]);
   
   // Funzione principale per recuperare tutti gli NFT
   const fetchNFTs = async () => {
-    if (!isConnected || totalNFTs === 0) {
+    if (!isConnected || !totalNFTs || totalNFTs === 0) {
       setLoading(false);
       return;
     }
@@ -140,7 +139,9 @@ const Home: React.FC = () => {
 
   // Carica gli NFT all'avvio
   useEffect(() => {
-    fetchNFTs();
+    if (isConnected) {
+      fetchNFTs();
+    }
   }, [isConnected, totalNFTs, address]);
 
   return (
@@ -149,66 +150,81 @@ const Home: React.FC = () => {
         <h1>DnA - Discovering new Answers</h1>
         <h2>
           <p>Unlock and own exclusive scientific content as NFTs!</p>
-          <p>This is your gateway to groundbreaking knowledge</p>
+          <p>This is your gateway to groundbreaking knowledge.</p>
         </h2>
       </div>
       
-      {!isConnected ? (
+      {!isConnected && (
         <div className="connect-prompt">
           <h2>Connect your wallet to discover, buy and unlock our NFTs</h2>
         </div>
-      ) : loading ? (
-        <div className="loading">
-          <div className="loading-spinner"></div>
-          <p>Loading NFTs...</p>
-        </div>
-      ) : nfts.length === 0 ? (
-        <div className="no-nfts">
-          <h2>No NFTs available</h2>
-          <p>There are no NFTs currently for sale.</p>
-        </div>
-      ) : (
-        <div className="nft-grid">
-          <h2>Available Scientific NFTs</h2>
-          <div className="grid">
-            {nfts.map(nft => (
-              <div key={nft.id} className="nft-card">
-                <div className="nft-image-container">
-                  {nft.image ? (
-                    <img 
-                      src={nft.image.startsWith('ipfs://') 
-                        ? nft.image.replace('ipfs://', 'https://ipfs.io/ipfs/') 
-                        : nft.image} 
-                      alt={nft.name} 
-                      className="nft-image" 
-                    />
-                  ) : (
-                    <div className="nft-image-placeholder">No Image</div>
-                  )}
-                </div>
-                <div className="nft-content">
-                  <h3>{nft.name}</h3>
-                  <p className="nft-description">
-                    {nft.description.length > 100 
-                      ? `${nft.description.substring(0, 100)}...` 
-                      : nft.description}
-                  </p>
-                  <div className="nft-price">{formatEther(nft.price)} ETH</div>
-                  <div className="nft-actions">
-                    <Link to={`/nft/${nft.id}`} className="details-button">Dettagli</Link>
-                    <button 
-                      className="buy-button" 
-                      onClick={() => handlePurchase(nft.id, nft.price)}
-                      disabled={purchasingId === nft.id || isPending}
-                    >
-                      {purchasingId === nft.id && isPending ? "In elaborazione..." : "Acquista"}
-                    </button>
+      )}
+      
+      {/* FeaturedContent mostrato dopo il prompt di connessione, ma separato da esso */}
+      <FeaturedContent />
+      
+      {isConnected && (
+        <>
+          {loading ? (
+            <div className="loading">
+              <div className="loading-spinner"></div>
+              <p>Loading NFTs...</p>
+            </div>
+          ) : nfts.length === 0 ? (
+            <div className="no-nfts">
+              <h2>No NFTs available</h2>
+              <p>There are no NFTs currently for sale.</p>
+            </div>
+          ) : (
+            <div className="nft-grid">
+              <h2>Available Scientific NFTs</h2>
+              <div className="grid">
+                {nfts.map(nft => (
+                  <div key={nft.id} className="nft-card">
+                    <div className="nft-image-container">
+                      {nft.image ? (
+                        <img 
+                          src={nft.image.startsWith('ipfs://') 
+                            ? nft.image.replace('ipfs://', 'https://ipfs.io/ipfs/') 
+                            : nft.image} 
+                          alt={nft.name} 
+                          className="nft-image" 
+                          onError={(e) => {
+                            // Immagine di fallback se l'URL non è valido
+                            (e.target as HTMLImageElement).src = '/images/placeholder-nft.jpg';
+                          }}
+                        />
+                      ) : (
+                        <div className="nft-image-placeholder">No Image</div>
+                      )}
+                    </div>
+                    <div className="nft-content">
+                      <h3>{nft.name}</h3>
+                      <p className="nft-description">
+                        {nft.description.length > 100 
+                          ? `${nft.description.substring(0, 100)}...` 
+                          : nft.description}
+                      </p>
+                      <div className="nft-price">{formatEther(nft.price)} ETH</div>
+                      <div className="nft-actions">
+                        <Link to={`/nft/${nft.id}`} className="details-button">Dettagli</Link>
+                        <button 
+                          className="buy-button" 
+                          onClick={() => handlePurchase(nft.id, nft.price)}
+                          disabled={purchasingId === nft.id || writeStatus === 'pending' || txStatus === 'pending'}
+                        >
+                          {purchasingId === nft.id && (writeStatus === 'pending' || txStatus === 'pending') 
+                            ? "In elaborazione..." 
+                            : "Acquista"}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

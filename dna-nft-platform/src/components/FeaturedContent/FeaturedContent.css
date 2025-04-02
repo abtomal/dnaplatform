@@ -1,0 +1,103 @@
+/* src/components/FeaturedContent/FeaturedContent.css */
+
+.featured-content {
+    margin: 2rem 0 3rem;
+    width: 100%;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 2rem;
+    border-radius: 2px;
+    position: relative;
+  }
+  
+  .featured-header {
+    margin-bottom: 2rem;
+    text-align: left;
+  }
+  
+  .featured-header h2 {
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+    font-family: var(--font-mono);
+    letter-spacing: -0.5px;
+  }
+  
+  .featured-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+  }
+  
+  .featured-error {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: rgba(255, 0, 0, 0.1);
+    border-left: 3px solid var(--accent-color);
+    color: #fff;
+    font-size: 0.9rem;
+  }
+  
+  .articles-only-container {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 1.5rem;
+  }
+  
+  .featured-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 0;
+  }
+  
+  .loading-spinner {
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid var(--accent-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .featured-footer {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    text-align: right;
+  }
+  
+  .featured-attribution {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .featured-attribution a {
+    color: var(--accent-color);
+    text-decoration: none;
+  }
+  
+  .featured-attribution a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .featured-content {
+      padding: 1.5rem;
+      margin: 1.5rem 0 2.5rem;
+    }
+    
+    .featured-header h2 {
+      font-size: 1.5rem;
+    }
+  }
