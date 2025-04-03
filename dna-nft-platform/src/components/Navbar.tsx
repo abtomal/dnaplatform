@@ -56,11 +56,11 @@ const Navbar: React.FC = () => {
                     }
 
                     return (
-                      <div className="dropdown">
-                        <div className="dropdown-toggle">
-                          {account.displayName} ▼
-                        </div>
-                        <div className="dropdown-menu">
+                      <div className="wallet-dropdown">
+                        <button className="wallet-button">
+                          {account.displayName} <span className="dropdown-icon">▼</span>
+                        </button>
+                        <div className="dropdown-content">
                           <Link to="/my-collection" className="dropdown-item">
                             My Collection
                           </Link>
