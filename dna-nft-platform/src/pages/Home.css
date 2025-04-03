@@ -77,4 +77,16 @@
       align-items: flex-start;
     }
   }
+
+  .connect-text-button {
+    color: var(--accent-color);
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  
+  .connect-text-button:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
   

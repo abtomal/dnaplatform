@@ -1,6 +1,7 @@
 // src/pages/Home.tsx
 import React, { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useTransaction } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { formatEther } from 'viem';
 import { Link } from 'react-router-dom';
 import { useNFTContract, NFT } from '../hooks/useNFTContract';
@@ -12,6 +13,7 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState<number | null>(null);
   const { address, isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const { totalNFTs, contractAddress, abi, fetchOwner, fetchPrice, fetchTokenURI } = useNFTContract();
   
   // Hook per scrivere sul contratto (acquisto NFT)
@@ -156,7 +158,14 @@ const Home: React.FC = () => {
       
       {!isConnected && (
         <div className="connect-prompt">
-          <h2>Connect your wallet to discover, buy and unlock our NFTs</h2>
+          <h2>
+            <span 
+              className="connect-text-button" 
+              onClick={openConnectModal}
+            >
+              Connect
+            </span> your wallet to discover, buy and unlock our NFTs
+          </h2>
         </div>
       )}
       

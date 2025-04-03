@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import NFTDetails from './pages/NFTDetails';
 import MyCollection from './pages/MyCollection';
+import Collection from './pages/Collection';  
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/nft/:id" element={<NFTDetails />} />
+          <Route path="/collection" element={<Collection />} />
           <Route path="/my-collection" element={<MyCollection />} />
         </Routes>
       </main>

@@ -123,7 +123,7 @@ const FeaturedContent: React.FC = () => {
   return (
     <div className="featured-content">
       <div className="featured-header">
-        <h2>Featured Articles</h2>
+        <h2>What's happening around the Globe?</h2>
         <p className="featured-subtitle">Discover the latest articles and science updates</p>
         {error && <p className="featured-error">{error}</p>}
       </div>

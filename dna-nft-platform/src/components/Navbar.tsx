@@ -17,7 +17,7 @@ const Navbar: React.FC = () => {
         
         <div className="navbar-links">
           <Link to="/" className="navbar-link">Home</Link>
-          <Link to="/my-collection" className="navbar-link">Collection</Link>
+          <Link to="/collection" className="navbar-link">Collection</Link>
         </div>
         
         <div className="navbar-wallet">
@@ -57,14 +57,15 @@ const Navbar: React.FC = () => {
                     }
 
                     return (
-                      <div className="wallet-connected">
-                        <button
-                          onClick={openAccountModal}
-                          type="button"
-                          className="wallet-button"
-                        >
-                          {account.displayName}
-                        </button>
+                      <div className="dropdown">
+                        <div className="dropdown-toggle">
+                          {account.displayName} ▼
+                        </div>
+                        <div className="dropdown-menu">
+                          <Link to="/my-collection" className="dropdown-item">
+                            My Collection
+                          </Link>
+                        </div>
                       </div>
                     );
                   })()}
