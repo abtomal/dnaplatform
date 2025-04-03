@@ -17,5 +17,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
-  }
+  },
+  "exclude": [
+    "smart-contracts",
+    "smart-contracts/**/*",
+    "**/node_modules",
+    "**/.*"
+  ]
 }
