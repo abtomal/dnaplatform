@@ -20,7 +20,6 @@ const NFTDetails: React.FC = () => {
   // Hook per scrivere sul contratto (acquisto NFT)
   const {
     writeContract,
-    data: txHash,
     isPending, 
     isError: isWriteError,
     error: writeError

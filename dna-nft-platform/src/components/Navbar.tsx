@@ -25,7 +25,6 @@ const Navbar: React.FC = () => {
             {({
               account,
               chain,
-              openAccountModal,
               openConnectModal,
               mounted,
             }) => {
