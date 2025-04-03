@@ -130,7 +130,9 @@ const NFTDetails: React.FC = () => {
         abi,
         functionName: 'purchaseNFT',
         args: [nft.id],
-        value: nft.price
+        value: nft.price,
+        chain: undefined,
+        account: address as `0x${string}`
       });
     } catch (error) {
       console.error("Errore durante l'acquisto dell'NFT:", error);

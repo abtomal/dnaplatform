@@ -64,7 +64,9 @@ const Collection: React.FC = () => {
         abi,
         functionName: 'purchaseNFT',
         args: [tokenId],
-        value: price
+        value: price,
+        chain: undefined, // Use the connected chain
+        account: address as `0x${string}` // Cast the address to the expected type
       });
     } catch (error) {
       console.error("Errore durante l'acquisto dell'NFT:", error);
