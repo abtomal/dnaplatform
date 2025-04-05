@@ -12,12 +12,12 @@ const MyCollection: React.FC = () => {
   const { address, isConnected } = useAccount();
   const { totalNFTs, fetchOwner, fetchPrice, fetchTokenURI } = useNFTContract();
 
-  // Funzione per recuperare i metadati dall'URI
+  // Function to retrieve metadata from URI
   const fetchMetadata = async (tokenURI: string) => {
     if (!tokenURI) return null;
     
     try {
-      // Gestisce sia URI IPFS che HTTP
+      // Handles both IPFS and HTTP URIs
       const uri = tokenURI.startsWith('ipfs://') 
         ? tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/') 
         : tokenURI;
@@ -30,12 +30,12 @@ const MyCollection: React.FC = () => {
       
       return await response.json();
     } catch (err) {
-      console.error('Errore nel recupero dei metadati:', err);
+      console.error('Error retrieving metadata:', err);
       return null;
     }
   };
 
-  // Carica gli NFT posseduti dall'utente
+  // Load NFTs owned by the user
   useEffect(() => {
     const fetchMyNFTs = async () => {
       if (!isConnected || !address || totalNFTs === 0) {
@@ -47,15 +47,15 @@ const MyCollection: React.FC = () => {
         setLoading(true);
         const fetchedNFTs: NFT[] = [];
 
-        // Recupera informazioni per ogni NFT
+        // Retrieve information for each NFT
         for (let i = 0; i < totalNFTs; i++) {
           try {
             const tokenId = i;
             
-            // Verifica il proprietario dell'NFT
+            // Verify the NFT owner
             const owner = await fetchOwner(tokenId);
             
-            // Includi solo gli NFT posseduti dall'utente corrente
+            // Include only NFTs owned by the current user
             if (owner.toLowerCase() !== address.toLowerCase()) {
               continue;
             }
@@ -63,7 +63,7 @@ const MyCollection: React.FC = () => {
             const price = await fetchPrice(tokenId);
             const tokenURI = await fetchTokenURI(tokenId);
 
-            // Recupera i metadati dall'URI
+            // Retrieve metadata from URI
             const metadata = await fetchMetadata(tokenURI);
             
             fetchedNFTs.push({
@@ -76,13 +76,13 @@ const MyCollection: React.FC = () => {
               attributes: metadata?.attributes
             });
           } catch (err) {
-            console.error(`Errore nel recupero dell'NFT ${i}:`, err);
+            console.error(`Error retrieving NFT ${i}:`, err);
           }
         }
 
         setMyNfts(fetchedNFTs);
       } catch (err) {
-        console.error('Errore nel caricamento degli NFT:', err);
+        console.error('Error loading NFTs:', err);
       } finally {
         setLoading(false);
       }
@@ -94,8 +94,8 @@ const MyCollection: React.FC = () => {
   if (!isConnected) {
     return (
       <div className="connect-prompt">
-        <h2>Connetti il tuo wallet</h2>
-        <p>Per visualizzare la tua collezione, connetti il tuo wallet Ethereum.</p>
+        <h2>Connect your wallet</h2>
+        <p>To view your collection, connect your Ethereum wallet.</p>
       </div>
     );
   }
@@ -103,24 +103,24 @@ const MyCollection: React.FC = () => {
   return (
     <div className="my-collection">
       <div className="collection-header">
-        <h1>La mia collezione NFT</h1>
+        <h1>My NFT Collection</h1>
         <p className="wallet-address">Wallet: {address}</p>
       </div>
       
       {loading ? (
         <div className="loading">
           <div className="loading-spinner"></div>
-          <p>Caricamento della collezione...</p>
+          <p>Loading collection...</p>
         </div>
       ) : myNfts.length === 0 ? (
         <div className="empty-collection">
-          <h2>Collezione vuota</h2>
-          <p>Non possiedi ancora nessun NFT. Acquistane uno dalla home page!</p>
-          <Link to="/" className="browse-button">Sfoglia gli NFT disponibili</Link>
+          <h2>Empty collection</h2>
+          <p>You don't own any NFTs yet. Purchase one from the home page!</p>
+          <Link to="/collection" className="browse-button">Browse available NFTs</Link>
         </div>
       ) : (
         <div className="nft-grid">
-          <h2>I tuoi NFT scientifici</h2>
+          <h2>Your scientific NFTs</h2>
           <div className="grid">
             {myNfts.map(nft => (
               <div key={nft.id} className="nft-card">
@@ -144,9 +144,9 @@ const MyCollection: React.FC = () => {
                       ? `${nft.description.substring(0, 100)}...` 
                       : nft.description}
                   </p>
-                  <div className="nft-price">Valore: {formatEther(nft.price)} ETH</div>
+                  <div className="nft-price">Value: {formatEther(nft.price)} ETH</div>
                   <div className="nft-actions">
-                    <Link to={`/nft/${nft.id}`} className="details-button">Visualizza contenuto</Link>
+                    <Link to={`/nft/${nft.id}`} className="details-button">View content</Link>
                   </div>
                 </div>
               </div>

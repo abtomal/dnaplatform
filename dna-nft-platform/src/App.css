@@ -15,10 +15,30 @@
 html, body {
   height: 100%;
   font-family: "Courier New", monospace;
-  background-color: var(--background-color);
   color: var(--text-color);
   line-height: 1.5;
   text-align: justify;
+}
+
+body {
+  background-color: var(--background-color);
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/bgdna.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  opacity: 0.4; /* Rende l'immagine più scura */
+  z-index: -1;
 }
 
 #root {
@@ -26,6 +46,14 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.app {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
 }
 
 .main-content {
@@ -34,6 +62,8 @@ html, body {
   max-width: 850px;
   margin: 0 auto;
   padding: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 a {

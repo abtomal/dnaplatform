@@ -146,7 +146,7 @@ const Collection: React.FC = () => {
   return (
     <div className="my-collection">
       <div className="collection-header">
-        <h1>NFT Collection</h1>
+        <h1>DISCOVER OUR NFTs</h1>
         <p>Discover and purchase unique scientific NFTs</p>
       </div>
       

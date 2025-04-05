@@ -14,10 +14,10 @@ const NFTDetails: React.FC = () => {
   const { address, isConnected } = useAccount();
   const { contractAddress, abi, tokenExists, fetchOwner, fetchPrice, fetchTokenURI } = useNFTContract();
   
-  // Ottieni l'ID del token
+  // Get the token ID
   const tokenId = id ? parseInt(id) : -1;
   
-  // Hook per scrivere sul contratto (acquisto NFT)
+  // Hook for writing to the contract (NFT purchase)
   const {
     writeContract,
     isPending, 
@@ -25,23 +25,23 @@ const NFTDetails: React.FC = () => {
     error: writeError
   } = useWriteContract();
   
-  // Ascolta eventi di acquisto per aggiornare l'interfaccia
+  // Listen for purchase events to update the interface
   useWatchContractEvent({
     address: contractAddress,
     abi,
     eventName: 'NFTPurchased',
     onLogs: () => {
-      // Ricarica i dettagli dell'NFT quando viene emesso un evento
+      // Reload NFT details when an event is emitted
       loadNFTDetails();
     },
   });
   
-  // Funzione per recuperare i metadati dall'URI
+  // Function to retrieve metadata from URI
   const fetchMetadata = async (tokenURI: string) => {
     if (!tokenURI) return null;
     
     try {
-      // Gestisce sia URI IPFS che HTTP
+      // Handle both IPFS and HTTP URIs
       const uri = tokenURI.startsWith('ipfs://') 
         ? tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/') 
         : tokenURI;
@@ -54,34 +54,34 @@ const NFTDetails: React.FC = () => {
       
       return await response.json();
     } catch (err) {
-      console.error('Errore nel recupero dei metadati:', err);
+      console.error('Error retrieving metadata:', err);
       return null;
     }
   };
   
-  // Funzione per caricare i dettagli dell'NFT
+  // Function to load NFT details
   const loadNFTDetails = async () => {
     if (tokenId < 0) {
-      setError("ID NFT non valido");
+      setError("Invalid NFT ID");
       setLoading(false);
       return;
     }
     
     try {
-      // Verifica se il token esiste
+      // Verify if the token exists
       const exists = await tokenExists(tokenId);
       if (!exists) {
-        setError("NFT non trovato");
+        setError("NFT not found");
         setLoading(false);
         return;
       }
       
-      // Recupera i dettagli dell'NFT
+      // Retrieve NFT details
       const owner = await fetchOwner(tokenId);
       const price = await fetchPrice(tokenId);
       const tokenURI = await fetchTokenURI(tokenId);
       
-      // Recupera i metadati
+      // Retrieve metadata
       const metadata = await fetchMetadata(tokenURI);
       
       const nftData: NFT = {
@@ -98,28 +98,28 @@ const NFTDetails: React.FC = () => {
       setError(null);
       setLoading(false);
     } catch (error) {
-      console.error(`Errore nel recupero dei dettagli dell'NFT:`, error);
-      setError("Errore nel caricamento dei dettagli dell'NFT");
+      console.error(`Error retrieving NFT details:`, error);
+      setError("Error loading NFT details");
       setLoading(false);
     }
   };
   
-  // Effetto per caricare i dettagli dell'NFT al caricamento o quando cambia l'ID
+  // Effect to load NFT details when loading or when ID changes
   useEffect(() => {
     loadNFTDetails();
   }, [tokenId]);
   
-  // Gestione degli errori di scrittura
+  // Write error handling
   useEffect(() => {
     if (isWriteError && writeError) {
-      alert(`Errore durante l'acquisto: ${writeError.message}`);
+      alert(`Error during purchase: ${writeError.message}`);
     }
   }, [isWriteError, writeError]);
   
-  // Gestione dell'acquisto
+  // Purchase handling
   const handlePurchase = () => {
     if (!isConnected || !address || !nft) {
-      alert("Connetti il tuo wallet per acquistare questo NFT");
+      alert("Connect your wallet to purchase this NFT");
       return;
     }
     
@@ -134,18 +134,18 @@ const NFTDetails: React.FC = () => {
         account: address as `0x${string}`
       });
     } catch (error) {
-      console.error("Errore durante l'acquisto dell'NFT:", error);
+      console.error("Error during NFT purchase:", error);
     }
   };
   
-  // Verifica se l'utente è il proprietario dell'NFT
+  // Check if the user is the owner of the NFT
   const isOwner = isConnected && address && nft && nft.owner.toLowerCase() === address.toLowerCase();
   
   if (loading) {
     return (
       <div className="loading">
         <div className="loading-spinner"></div>
-        <p>Caricamento dettagli NFT...</p>
+        <p>Loading NFT details...</p>
       </div>
     );
   }
@@ -153,9 +153,9 @@ const NFTDetails: React.FC = () => {
   if (error) {
     return (
       <div className="error-container">
-        <h2>Si è verificato un errore</h2>
+        <h2>An error occurred</h2>
         <p>{error}</p>
-        <Link to="/" className="back-button">Torna alla home</Link>
+        <Link to="/" className="back-button">Back to home</Link>
       </div>
     );
   }
@@ -167,7 +167,7 @@ const NFTDetails: React.FC = () => {
   return (
     <div className="nft-details">
       <div className="details-header">
-        <Link to="/" className="back-link">&larr; Torna alla home</Link>
+        <Link to="/" className="back-link">&larr; Back to home</Link>
         <h1>{nft.name}</h1>
       </div>
       
@@ -188,13 +188,13 @@ const NFTDetails: React.FC = () => {
         
         <div className="nft-info">
           <div className="info-section">
-            <h2>Descrizione</h2>
+            <h2>Description</h2>
             <p className="nft-description-full">{nft.description}</p>
           </div>
           
           {nft.attributes && nft.attributes.length > 0 && (
             <div className="info-section">
-              <h2>Attributi</h2>
+              <h2>Attributes</h2>
               <div className="attributes-container">
                 {nft.attributes.map((attr, index) => (
                   <div key={index} className="attribute-card">
@@ -207,17 +207,17 @@ const NFTDetails: React.FC = () => {
           )}
           
           <div className="info-section">
-            <h2>Dettagli</h2>
+            <h2>Details</h2>
             <div className="detail-row">
-              <span className="detail-label">ID Token:</span>
+              <span className="detail-label">Token ID:</span>
               <span className="detail-value">{nft.id}</span>
             </div>
             <div className="detail-row">
-              <span className="detail-label">Proprietario:</span>
+              <span className="detail-label">Owner:</span>
               <span className="detail-value address">{nft.owner}</span>
             </div>
             <div className="detail-row">
-              <span className="detail-label">Prezzo:</span>
+              <span className="detail-label">Price:</span>
               <span className="detail-value price">{formatEther(nft.price)} ETH</span>
             </div>
           </div>
@@ -225,8 +225,8 @@ const NFTDetails: React.FC = () => {
           <div className="action-section">
             {isOwner ? (
               <div className="owner-message">
-                <p>Sei il proprietario di questo NFT</p>
-                <Link to="/my-collection" className="collection-link">Visualizza la tua collezione</Link>
+                <p>You are the owner of this NFT</p>
+                <Link to="/my-collection" className="collection-link">View your collection</Link>
               </div>
             ) : (
               <button 
@@ -234,7 +234,7 @@ const NFTDetails: React.FC = () => {
                 onClick={handlePurchase}
                 disabled={isPending}
               >
-                {isPending ? "Transazione in corso..." : `Acquista per ${formatEther(nft.price)} ETH`}
+                {isPending ? "Transaction in progress..." : `Purchase for ${formatEther(nft.price)} ETH`}
               </button>
             )}
           </div>
@@ -243,26 +243,26 @@ const NFTDetails: React.FC = () => {
       
       {isOwner && (
         <div className="content-access">
-          <h2>Contenuto esclusivo</h2>
+          <h2>Exclusive content</h2>
           <div className="exclusive-content">
-            <p>In quanto proprietario di questo NFT, hai accesso al contenuto esclusivo!</p>
+            <p>As the owner of this NFT, you have access to exclusive content!</p>
             <div className="content-box">
-              <h3>Contenuto scientifico protetto da NFT</h3>
-              <p>Questo è un esempio di articolo scientifico accessibile solo ai proprietari dell'NFT.</p>
+              <h3>Scientific content protected by NFT</h3>
+              <p>This is an example of a scientific article accessible only to NFT owners.</p>
               <div className="scientific-content">
                 <h4>Abstract</h4>
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula.</p>
                 
-                <h4>Introduzione</h4>
+                <h4>Introduction</h4>
                 <p>Ut ultrices ultrices enim. Curabitur sit amet mauris. Morbi in dui quis est pulvinar ullamcorper. Nulla facilisi. Integer lacinia sollicitudin massa.</p>
                 
-                <h4>Metodologia</h4>
+                <h4>Methodology</h4>
                 <p>Cras metus. Sed aliquet risus a tortor. Integer id quam. Morbi mi. Quisque nisl felis, venenatis tristique, dignissim in, ultrices sit amet, augue.</p>
                 
-                <h4>Risultati</h4>
+                <h4>Results</h4>
                 <p>Proin sodales libero eget ante. Nulla quam. Aenean laoreet. Vestibulum nisi lectus, commodo ac, facilisis ac, ultricies eu, pede.</p>
                 
-                <h4>Conclusioni</h4>
+                <h4>Conclusions</h4>
                 <p>Donec lacus nunc, viverra nec, blandit vel, egestas et, augue. Vestibulum tincidunt malesuada tellus. Ut ultrices ultrices enim.</p>
               </div>
             </div>
